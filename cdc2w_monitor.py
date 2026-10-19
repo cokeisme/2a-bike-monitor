@@ -197,8 +197,8 @@ def date_line(iso, i):
     return s
 
 
-def describe(info, dates, vis_title="AVAILABLE ON APP",
-             hid_title="HIDDEN (in database, not on app yet)"):
+def describe(info, dates, vis_title="AVAILABLE ON WEBSITE",
+             hid_title="HIDDEN (in database, not on website yet)"):
     vis = sorted(d for d in dates if info[d]["visible"])
     hid = sorted(d for d in dates if not info[d]["visible"])
     parts = []
@@ -274,8 +274,8 @@ def main():
                 if new_vis or new_hid:
                     send("2A/2 test date update!\n\n" + describe(
                         info, new_vis | new_hid,
-                        "NOW AVAILABLE ON APP",
-                        "NEW HIDDEN DATE (in database, not on app yet)"))
+                        "NOW AVAILABLE ON WEBSITE",
+                        "NEW HIDDEN DATE (in database, not on website yet)"))
                 state = save_state(known | now_all, seen_vis | now_vis, today)
             fails, warned = 0, False
             if single:
