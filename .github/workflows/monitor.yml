@@ -1,0 +1,55 @@
+# Save this in your repo at:  .github/workflows/monitor.yml
+name: CDC2W bike monitor
+
+on:
+  schedule:
+    # every 10 minutes (offset from :00 because GitHub is busiest then)
+    - cron: "3,13,23,33,43,53 * * * *"
+  workflow_dispatch:   # lets you press "Run workflow" manually to test
+
+concurrency:
+  group: monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      # Bring back what the last run remembered (dates already reported, sign-in)
+      - name: Restore saved state
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            seen_state.json
+            auth_state.json
+          key: state-${{ github.run_id }}
+          restore-keys: state-
+
+      - name: Check bike dates
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python cdc2w_monitor.py --check
+
+      # Keep it for the next run (only if this run succeeded)
+      - name: Save state
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            seen_state.json
+            auth_state.json
+          key: state-${{ github.run_id }}
